@@ -11,9 +11,13 @@ def test_identify_coin_sends_both_sides_in_one_model_request(monkeypatch) -> Non
             request.update(kwargs)
             return SimpleNamespace(
                 output_text=(
-                    '{"country":"France","denomination":"1 franc","year":1935,'
-                    '"mint":null,"metal":null,"description":"Morlon coin",'
-                    '"confidence":0.95}'
+                    '{"identification":{"country":"France",'
+                    '"denomination":"1 franc","year":1935,"mint":null,'
+                    '"metal":null,"description":"Morlon coin","confidence":0.95},'
+                    '"condition_assessment":{"grade":"VF",'
+                    '"observed_wear":"Some detail remains visible",'
+                    '"rationale":"Moderate wear on the raised design",'
+                    '"confidence":0.8}}'
                 )
             )
 
@@ -34,4 +38,5 @@ def test_identify_coin_sends_both_sides_in_one_model_request(monkeypatch) -> Non
     assert images[0]["image_url"].startswith("data:image/jpeg;base64,")
     assert images[1]["image_url"].startswith("data:image/png;base64,")
     assert "both views together" in content[0]["text"]
-    assert result.year == 1935
+    assert result.identification.year == 1935
+    assert result.condition_assessment.grade == "VF"

@@ -1,7 +1,13 @@
 from fastapi.testclient import TestClient
 
 from coinappraiser.api import app
-from coinappraiser.models import AppraisalResult, Identification, PriceReference
+from coinappraiser.models import (
+    AppraisalResult,
+    ConditionAssessment,
+    Identification,
+    NumistaValue,
+    PriceReference,
+)
 
 client = TestClient(app)
 
@@ -37,6 +43,21 @@ def test_appraisal_returns_source_price_references(monkeypatch) -> None:
     monkeypatch.setattr(
         "coinappraiser.api.appraise_images",
         lambda images: AppraisalResult(
+            numista_value=NumistaValue(
+                grade="VF",
+                price=12,
+                currency="EUR",
+                source_url="https://en.numista.com/",
+                catalog_reference="Franc 2014 #219/1",
+                price_date=None,
+            ),
+            numista_value_note="Exact Numista grade match.",
+            condition_assessment=ConditionAssessment(
+                grade="VF",
+                observed_wear="Some wear visible",
+                rationale="Central detail remains",
+                confidence=0.8,
+            ),
             identification=Identification(
                 country="France",
                 denomination="1 franc",
@@ -71,6 +92,9 @@ def test_appraisal_returns_source_price_references(monkeypatch) -> None:
     )
 
     assert response.status_code == 200
+    assert response.json()["numista_value"]["grade"] == "VF"
+    assert response.json()["numista_value"]["price"] == 12
+    assert response.json()["condition_assessment"]["rationale"] == "Central detail remains"
     assert response.json()["price_references"][0]["url"] == "https://en.numista.com/"
     assert response.json()["price_references"][0]["price"] == 12
 
@@ -81,6 +105,14 @@ def test_appraisal_accepts_obverse_and_reverse_together(monkeypatch) -> None:
     def fake_appraise(images):
         received_images.extend(images)
         return AppraisalResult(
+            numista_value=None,
+            numista_value_note="No exact Numista grade price.",
+            condition_assessment=ConditionAssessment(
+                grade="VF",
+                observed_wear="Wear is visible",
+                rationale="Moderate wear on raised parts",
+                confidence=0.8,
+            ),
             identification=Identification(
                 country="France",
                 denomination="1 franc",

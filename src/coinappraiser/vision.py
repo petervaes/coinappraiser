@@ -2,8 +2,9 @@ import base64
 import os
 
 from openai import OpenAI
+from pydantic import BaseModel
 
-from coinappraiser.models import Identification
+from coinappraiser.models import ConditionAssessment, Identification
 
 SUPPORTED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif"}
 
@@ -12,7 +13,12 @@ class VisionConfigurationError(Exception):
     """Raised when image identification is not configured."""
 
 
-def identify_coin(images: list[tuple[bytes, str]]) -> Identification:
+class CoinAnalysis(BaseModel):
+    identification: Identification
+    condition_assessment: ConditionAssessment
+
+
+def identify_coin(images: list[tuple[bytes, str]]) -> CoinAnalysis:
     if not images:
         raise ValueError("At least one coin photo is required.")
     if len(images) > 2:
@@ -26,11 +32,17 @@ def identify_coin(images: list[tuple[bytes, str]]) -> Identification:
         {
             "type": "input_text",
             "text": (
-                "Identify the coin from the supplied photo or photos. If two images "
-                "are provided, they show the obverse and reverse of the same coin; "
-                "use both views together. Report only visible or well-supported "
-                "attributes. Do not estimate a price. Use null for uncertain country, "
-                "denomination, year, mint, or metal. Give confidence from 0 to 1."
+                "Identify and cautiously assess the coin from the supplied photo or "
+                "photos. If two images are provided, they show the obverse and reverse "
+                "of the same coin; use both views together. Report only visible or "
+                "well-supported identity attributes. Do not estimate or infer a price. "
+                "Assess the visible grade using the Numista scale G, VG, F, VF, XF, AU, "
+                "UNC. Base the grade on wear of the highest design points and retained "
+                "details on both sides; use the worse-preserved side. Describe the "
+                "specific visible wear/details that justify the grade. Do not infer "
+                "grade from color alone. If image quality or views do not support a "
+                "defensible grade, set grade to null and explain why. Confidence is "
+                "about the photo-based assessment, not a professional certification."
             ),
         }
     ]
@@ -64,26 +76,61 @@ def identify_coin(images: list[tuple[bytes, str]]) -> Identification:
                 "schema": {
                     "type": "object",
                     "properties": {
-                        "country": {"type": ["string", "null"]},
-                        "denomination": {"type": ["string", "null"]},
-                        "year": {"type": ["integer", "null"]},
-                        "mint": {"type": ["string", "null"]},
-                        "metal": {"type": ["string", "null"]},
-                        "description": {"type": "string"},
-                        "confidence": {"type": "number"},
+                        "identification": {
+                            "type": "object",
+                            "properties": {
+                                "country": {"type": ["string", "null"]},
+                                "denomination": {"type": ["string", "null"]},
+                                "year": {"type": ["integer", "null"]},
+                                "mint": {"type": ["string", "null"]},
+                                "metal": {"type": ["string", "null"]},
+                                "description": {"type": "string"},
+                                "confidence": {"type": "number"},
+                            },
+                            "required": [
+                                "country",
+                                "denomination",
+                                "year",
+                                "mint",
+                                "metal",
+                                "description",
+                                "confidence",
+                            ],
+                            "additionalProperties": False,
+                        },
+                        "condition_assessment": {
+                            "type": "object",
+                            "properties": {
+                                "grade": {
+                                    "type": ["string", "null"],
+                                    "enum": [
+                                        "G",
+                                        "VG",
+                                        "F",
+                                        "VF",
+                                        "XF",
+                                        "AU",
+                                        "UNC",
+                                        None,
+                                    ],
+                                },
+                                "observed_wear": {"type": "string"},
+                                "rationale": {"type": "string"},
+                                "confidence": {"type": "number"},
+                            },
+                            "required": [
+                                "grade",
+                                "observed_wear",
+                                "rationale",
+                                "confidence",
+                            ],
+                            "additionalProperties": False,
+                        },
                     },
-                    "required": [
-                        "country",
-                        "denomination",
-                        "year",
-                        "mint",
-                        "metal",
-                        "description",
-                        "confidence",
-                    ],
+                    "required": ["identification", "condition_assessment"],
                     "additionalProperties": False,
                 },
             }
         },
     )
-    return Identification.model_validate_json(response.output_text)
+    return CoinAnalysis.model_validate_json(response.output_text)

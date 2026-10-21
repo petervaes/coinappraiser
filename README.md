@@ -98,6 +98,15 @@ both images together to the vision model. Existing clients can keep using the
 single `image` field.
 `GET /health` is a process health check and does not make external API calls.
 
+The appraisal response puts `numista_value` first: when the coin identity and
+photo-assessed Numista grade exactly match a catalog record, it contains that
+grade's Numista price. `condition_assessment` reports the estimated grade,
+visible wear, rationale, and confidence. If the grade is uncertain or no price
+is cataloged for that exact grade, `numista_value` is `null` and
+`numista_value_note` explains why. Lefranc prices remain separately listed in
+`price_references`; their grade labels are not treated as interchangeable with
+Numista grades.
+
 ## Run the CLI
 
 ```powershell
@@ -119,5 +128,8 @@ Both the CLI and API use the same appraisal flow. The combined upload limit is
 - Returned prices are references as listed by their source, not an appraisal
   or guaranteed current market value. Coin condition, authenticity, variant,
   and source date affect valuation and need explicit catalog coverage.
+- Photo-based condition is a preliminary visual estimate, not professional
+  grading. Glare, focus, angle, cleaning, damage, and missing edge views can
+  affect it; use both sides and have valuable coins assessed in person.
 - Lefranc/Numista content is not bundled. Populate the catalog only from data
   you are permitted to use, with source URLs and condition/currency details.
