@@ -21,6 +21,7 @@ dev = ["pytest>=8,<9", "httpx>=0.27,<1"]
 
 [project.scripts]
 coinappraiser = "coinappraiser.cli:main"
+coinappraiser-import-catalog = "coinappraiser.importer:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

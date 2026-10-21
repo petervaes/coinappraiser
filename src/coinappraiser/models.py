@@ -26,6 +26,9 @@ class CatalogRecord(BaseModel):
     grade: str | None = None
     price: float | None = Field(default=None, ge=0)
     currency: str | None = None
+    catalog_reference: str | None = None
+    mintage: int | None = Field(default=None, ge=0)
+    price_date: int | None = Field(default=None, ge=1)
 
 
 class Catalog(BaseModel):

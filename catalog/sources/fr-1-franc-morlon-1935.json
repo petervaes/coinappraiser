@@ -1,0 +1,71 @@
+{
+  "country": "France",
+  "denomination": "1 franc",
+  "year": 1935,
+  "mint": null,
+  "metal": null,
+  "variant": "Morlon (wing reverse)",
+  "sources": [
+    {
+      "source": "numista",
+      "url": "https://en.numista.com/707",
+      "catalog_reference": "Franc 2014 #219/6",
+      "mintage": 1166038,
+      "prices": [
+        {
+          "grade": "F",
+          "price": 12,
+          "currency": "EUR"
+        },
+        {
+          "grade": "VF",
+          "price": 15,
+          "currency": "EUR"
+        },
+        {
+          "grade": "XF",
+          "price": 19,
+          "currency": "EUR"
+        }
+      ]
+    },
+    {
+      "source": "lefranc",
+      "url": "https://www.lefranc.net/monnaie,1-franc-morlon,219.html",
+      "catalog_reference": "F.219/6",
+      "price_date": 2017,
+      "prices": [
+        {
+          "grade": "B",
+          "price": 10,
+          "currency": "EUR"
+        },
+        {
+          "grade": "TB",
+          "price": 25,
+          "currency": "EUR"
+        },
+        {
+          "grade": "TTB",
+          "price": 45,
+          "currency": "EUR"
+        },
+        {
+          "grade": "SUP",
+          "price": 120,
+          "currency": "EUR"
+        },
+        {
+          "grade": "SPL",
+          "price": 300,
+          "currency": "EUR"
+        },
+        {
+          "grade": "FDC",
+          "price": 500,
+          "currency": "EUR"
+        }
+      ]
+    }
+  ]
+}

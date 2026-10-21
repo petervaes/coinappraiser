@@ -59,9 +59,31 @@ The catalog URL must use HTTPS and return JSON in this format:
 
 Use one record per source, coin variant, grade, and price. `source` and `url`
 identify the provenance; `price`, `currency`, and `grade` must reflect the
-source record. The included catalog has no records, so it will correctly
-return no price references until real, appropriately licensed catalog data is
-added. Do not put API keys or other secrets in the catalog or a public GitHub
+source record. Numista references sort ahead of Lefranc for otherwise equally
+matching coins; values from different grade scales are kept separate and are
+never averaged.
+
+## Import reviewed source data
+
+Reviewed per-coin source data lives in `catalog/sources/`. Rebuild the app's
+catalog JSON after adding/editing source records:
+
+```powershell
+coinappraiser-import-catalog
+```
+
+The importer validates the source, HTTPS URL, currency, grade, and price, then
+writes `catalog/catalog.json`. It does not scrape Numista or Lefranc. The
+current `catalog/sources/fr-1-franc-morlon-1935.json` contains the Numista
+values supplied for Franc 2014 #219/6 and the Lefranc F.219/6 grade quotations.
+Numista shows EUR 12 (F), EUR 15 (VF), and EUR 19 (XF), with a mintage of
+1,166,038. The source data does not provide Numista prices for the other
+grades. Lefranc quotes EUR 10 (B), EUR 25 (TB), EUR 45 (TTB), EUR 120 (SUP),
+EUR 300 (SPL), and EUR 500 (FDC); the e-FRANC page describes its quotations as
+2017. These are source quotations, not condition-adjusted offers or guaranteed
+sale prices. Source URLs are preserved on every record.
+
+Do not put API keys or other secrets in source data or a public GitHub
 repository.
 
 ## Run the API

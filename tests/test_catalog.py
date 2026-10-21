@@ -99,3 +99,47 @@ def test_search_uses_partial_country_and_denomination_matches() -> None:
     )
 
     assert search_catalog(identification, catalog)[0].id == "record"
+
+
+def test_search_prefers_numista_when_match_scores_are_equal() -> None:
+    catalog = Catalog(
+        records=[
+            CatalogRecord(
+                id="lefranc",
+                title="French 1 franc",
+                source="lefranc",
+                url="https://example.test/lefranc",
+                country="France",
+                denomination="1 franc",
+                year=1935,
+                grade="TTB",
+                price=45,
+                currency="EUR",
+            ),
+            CatalogRecord(
+                id="numista",
+                title="French 1 franc",
+                source="numista",
+                url="https://example.test/numista",
+                country="France",
+                denomination="1 franc",
+                year=1935,
+                grade="VF",
+                price=15,
+                currency="EUR",
+            ),
+        ]
+    )
+    identification = Identification(
+        country="France",
+        denomination="1 franc",
+        year=1935,
+        mint=None,
+        metal=None,
+        description="French coin",
+        confidence=0.9,
+    )
+
+    results = search_catalog(identification, catalog)
+
+    assert [record.source for record in results] == ["numista", "lefranc"]

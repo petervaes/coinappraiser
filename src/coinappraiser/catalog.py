@@ -11,7 +11,12 @@ from coinappraiser.models import Catalog, Identification, PriceReference
 
 MAX_CATALOG_BYTES = 5 * 1024 * 1024
 CATALOG_TIMEOUT_SECONDS = 10
-DEFAULT_CATALOG = Path(__file__).with_name("catalog.json")
+REPOSITORY_CATALOG = Path(__file__).resolve().parents[2] / "catalog" / "catalog.json"
+DEFAULT_CATALOG = (
+    REPOSITORY_CATALOG
+    if REPOSITORY_CATALOG.is_file()
+    else Path(__file__).with_name("catalog.json")
+)
 
 
 class CatalogUnavailableError(Exception):
@@ -40,7 +45,7 @@ def load_catalog() -> Catalog:
 def search_catalog(
     identification: Identification,
     catalog: Catalog,
-    limit: int = 5,
+    limit: int = 10,
 ) -> list[PriceReference]:
     matches: list[PriceReference] = []
     for record in catalog.records:
@@ -68,8 +73,31 @@ def search_catalog(
                 score += weight
         if score:
             matches.append(PriceReference(**record.model_dump(), match_score=score))
-    matches.sort(key=lambda item: (-item.match_score, item.source, item.id))
+    matches.sort(
+        key=lambda item: (
+            -item.match_score,
+            _source_priority(item.source),
+            item.source,
+            _grade_priority(item.source, item.grade),
+            item.id,
+        )
+    )
     return matches[:limit]
+
+
+def _source_priority(source: str) -> int:
+    return {"numista": 0, "lefranc": 1}.get(source.casefold(), 2)
+
+
+def _grade_priority(source: str, grade: str | None) -> int:
+    grade_orders = {
+        "numista": ("G", "VG", "F", "VF", "XF", "AU", "UNC"),
+        "lefranc": ("B", "TB", "TTB", "SUP", "SPL", "FDC"),
+    }
+    try:
+        return grade_orders[source.casefold()].index((grade or "").upper())
+    except (KeyError, ValueError):
+        return len(grade_orders.get(source.casefold(), ()))
 
 
 def _normalize(value: str) -> str:
