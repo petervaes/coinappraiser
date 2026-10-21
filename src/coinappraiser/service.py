@@ -6,12 +6,20 @@ MAX_IMAGE_BYTES = 10 * 1024 * 1024
 
 
 def appraise_image(image: bytes, content_type: str) -> AppraisalResult:
-    if not image:
+    return appraise_images([(image, content_type)])
+
+
+def appraise_images(images: list[tuple[bytes, str]]) -> AppraisalResult:
+    if not images:
+        raise ValueError("At least one coin photo is required.")
+    if len(images) > 2:
+        raise ValueError("Upload no more than two coin photos.")
+    if any(not image for image, _ in images):
         raise ValueError("The uploaded image is empty.")
-    if len(image) > MAX_IMAGE_BYTES:
+    if sum(len(image) for image, _ in images) > MAX_IMAGE_BYTES:
         raise ValueError("The uploaded image exceeds the 10 MiB limit.")
 
-    identification = identify_coin(image, content_type)
+    identification = identify_coin(images)
     matches = search_catalog(identification, load_catalog())
     return AppraisalResult(
         identification=identification,

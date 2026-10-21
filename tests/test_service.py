@@ -15,7 +15,7 @@ def test_appraise_image_returns_explicit_no_reference_note(monkeypatch) -> None:
         description="French coin",
         confidence=0.9,
     )
-    monkeypatch.setattr(service, "identify_coin", lambda image, content_type: identification)
+    monkeypatch.setattr(service, "identify_coin", lambda images: identification)
     monkeypatch.setattr(service, "load_catalog", lambda: Catalog(records=[]))
 
     result = service.appraise_image(b"image", "image/jpeg")
@@ -23,6 +23,34 @@ def test_appraise_image_returns_explicit_no_reference_note(monkeypatch) -> None:
     assert result.identification == identification
     assert result.price_references == []
     assert result.valuation_note == "No matching catalog references were found."
+
+
+def test_appraise_images_passes_both_coin_sides_to_identification(monkeypatch) -> None:
+    identification = Identification(
+        country="France",
+        denomination="1 franc",
+        year=1935,
+        mint=None,
+        metal=None,
+        description="French coin",
+        confidence=0.95,
+    )
+    received_images = []
+    monkeypatch.setattr(
+        service,
+        "identify_coin",
+        lambda images: (received_images.extend(images), identification)[1],
+    )
+    monkeypatch.setattr(service, "load_catalog", lambda: Catalog(records=[]))
+
+    service.appraise_images(
+        [(b"obverse", "image/jpeg"), (b"reverse", "image/png")]
+    )
+
+    assert received_images == [
+        (b"obverse", "image/jpeg"),
+        (b"reverse", "image/png"),
+    ]
 
 
 @pytest.mark.parametrize(

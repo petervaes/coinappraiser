@@ -92,17 +92,22 @@ repository.
 uvicorn coinappraiser.api:app --reload
 ```
 
-Open `http://127.0.0.1:8000/docs` to use `POST /appraisals` with a coin photo.
+Open `http://127.0.0.1:8000/docs` to use `POST /appraisals`. Upload the front
+as `obverse` and the back as `reverse`; the reverse is optional. The app sends
+both images together to the vision model. Existing clients can keep using the
+single `image` field.
 `GET /health` is a process health check and does not make external API calls.
 
 ## Run the CLI
 
 ```powershell
-coinappraiser path\to\coin.jpg
+coinappraiser path\to\front.jpg --reverse path\to\back.jpg
 ```
 
+The reverse image is optional, so `coinappraiser path\to\coin.jpg` still works.
 The command prints the identification and matching price references as JSON.
-Both the CLI and API use the same appraisal flow.
+Both the CLI and API use the same appraisal flow. The combined upload limit is
+10 MiB.
 
 ## Scope and limitations
 
